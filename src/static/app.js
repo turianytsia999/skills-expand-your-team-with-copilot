@@ -554,6 +554,13 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-buttons">
+        <span class="share-label">Share:</span>
+        <button type="button" class="share-button" data-network="facebook" title="Share on Facebook" aria-label="Share on Facebook">f</button>
+        <button type="button" class="share-button" data-network="twitter" title="Share on X" aria-label="Share on X">𝕏</button>
+        <button type="button" class="share-button" data-network="email" title="Share by email" aria-label="Share by email">✉</button>
+        <button type="button" class="share-button" data-network="copy" title="Copy link" aria-label="Copy link">🔗</button>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -573,6 +580,12 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    activityCard.querySelectorAll(".share-button").forEach((button) => {
+      button.addEventListener("click", () =>
+        shareActivity(button.dataset.network, name, details, button)
+      );
+    });
+
     // Add click handlers for delete buttons
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
     deleteButtons.forEach((button) => {
@@ -590,6 +603,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     activitiesList.appendChild(activityCard);
+  }
+
+  // Share an activity on a social network, by email, or copy its link
+  function shareActivity(network, name, details, button) {
+    const url = window.location.href.split("#")[0];
+    const text = `Check out "${name}" at our school: ${details.description}`;
+    const u = encodeURIComponent(url);
+    const t = encodeURIComponent(text);
+    const links = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${t}`,
+      twitter: `https://twitter.com/intent/tweet?text=${t}&url=${u}`,
+      email: `mailto:?subject=${encodeURIComponent(name)}&body=${t}%0A${u}`,
+    };
+    if (network === "copy") {
+      const done = () => {
+        button.textContent = "✔";
+        setTimeout(() => (button.textContent = "🔗"), 1500);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(`${text} ${url}`).then(done);
+      }
+      return;
+    }
+    if (network === "email") {
+      window.location.href = links.email;
+    } else {
+      window.open(links[network], "_blank", "noopener,noreferrer");
+    }
   }
 
   // Event listeners for search and filter
