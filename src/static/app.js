@@ -474,6 +474,35 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Share an activity on a social network, by email, or by copying the link
+  function shareActivity(network, name, details, button) {
+    const url = window.location.origin + window.location.pathname;
+    const text = `Check out ${name} at Mergington High School: ${details.description}`;
+    const u = encodeURIComponent(url);
+    const t = encodeURIComponent(text);
+    const targets = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${t}`,
+      twitter: `https://twitter.com/intent/tweet?text=${t}&url=${u}`,
+      email: `mailto:?subject=${encodeURIComponent(name)}&body=${encodeURIComponent(text + "\n" + url)}`,
+    };
+    if (network === "copy") {
+      const done = () => {
+        const old = button.textContent;
+        button.textContent = "✓";
+        setTimeout(() => (button.textContent = old), 1500);
+      };
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(`${text} ${url}`).then(done, () => {});
+      }
+      return;
+    }
+    if (network === "email") {
+      window.location.href = targets.email;
+    } else {
+      window.open(targets[network], "_blank", "noopener,noreferrer,width=600,height=500");
+    }
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -554,6 +583,13 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-buttons" aria-label="Share this activity">
+        <span class="share-label">Share:</span>
+        <button type="button" class="share-button" data-network="facebook" title="Share on Facebook" aria-label="Share on Facebook">f</button>
+        <button type="button" class="share-button" data-network="twitter" title="Share on X" aria-label="Share on X">𝕏</button>
+        <button type="button" class="share-button" data-network="email" title="Share via email" aria-label="Share via email">✉</button>
+        <button type="button" class="share-button" data-network="copy" title="Copy link" aria-label="Copy link">🔗</button>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -572,6 +608,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       </div>
     `;
+
+    activityCard.querySelectorAll(".share-button").forEach((button) => {
+      button.addEventListener("click", () =>
+        shareActivity(button.dataset.network, name, details, button)
+      );
+    });
 
     // Add click handlers for delete buttons
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
