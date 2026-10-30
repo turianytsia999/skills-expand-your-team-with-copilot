@@ -474,6 +474,47 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Adds social sharing buttons to a card
+  function addShareButtons(container, name, details) {
+    const pageUrl = window.location.href.split("#")[0];
+    const text = `Check out "${name}" at Mergington High School: ${details.description}`;
+    const url = encodeURIComponent(pageUrl);
+    const msg = encodeURIComponent(text);
+    const links = [
+      { label: "Facebook", icon: "f", href: `https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${msg}` },
+      { label: "X", icon: "𝕏", href: `https://twitter.com/intent/tweet?text=${msg}&url=${url}` },
+      { label: "WhatsApp", icon: "W", href: `https://wa.me/?text=${msg}%20${url}` },
+      { label: "Email", icon: "✉", href: `mailto:?subject=${encodeURIComponent(name)}&body=${msg}%20${url}` },
+    ];
+    links.forEach((l) => {
+      const a = document.createElement("a");
+      a.className = "share-button";
+      a.href = l.href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.title = `Share on ${l.label}`;
+      a.setAttribute("aria-label", `Share ${name} on ${l.label}`);
+      a.textContent = l.icon;
+      container.appendChild(a);
+    });
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "share-button";
+    copy.title = "Copy link";
+    copy.setAttribute("aria-label", `Copy link to share ${name}`);
+    copy.textContent = "🔗";
+    copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(`${text} ${pageUrl}`);
+        copy.textContent = "✓";
+      } catch (e) {
+        copy.textContent = "!";
+      }
+      setTimeout(() => (copy.textContent = "🔗"), 1500);
+    });
+    container.appendChild(copy);
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -554,6 +595,9 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-buttons" aria-label="Share this activity">
+        <span class="share-label">Share:</span>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -572,6 +616,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       </div>
     `;
+
+    addShareButtons(activityCard.querySelector(".share-buttons"), name, details);
 
     // Add click handlers for delete buttons
     const deleteButtons = activityCard.querySelectorAll(".delete-participant");
